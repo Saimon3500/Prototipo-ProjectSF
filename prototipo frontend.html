@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Simulación — Gestión de Registros (Tema Oscuro)</title>
+
+    <!-- Tipografía -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --bg-1: #07060a;
+            --bg-2: #0b0f17;
+            --card: rgba(18,22,31,0.7);
+            --glass: rgba(255,255,255,0.03);
+            --muted: #9aa4b2;
+            --text: #e6eef8;
+            --accent: #7c5cff;
+            --accent-2: #22c1c3;
+            --success: #2ecc71;
+            --radius: 12px;
+            --shadow-lg: 0 10px 30px rgba(2,6,23,0.6);
+            --gap: 14px;
+            --glass-border: rgba(255,255,255,0.04);
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%; margin:0; font-family:'Inter',system-ui,Segoe UI,Arial; color:var(--text); background: linear-gradient(180deg,var(--bg-1),var(--bg-2)); -webkit-font-smoothing:antialiased;}
+
+        .container{
+            max-width: 980px;
+            margin: 48px auto;
+            padding: 26px;
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(6px) saturate(120%);
+        }
+
+        h1,h2{margin:0 0 12px 0; font-weight:600; color:var(--text); text-align:center}
+        h3{color:var(--muted); text-align:center; margin-top:8px}
+
+        form{display:flex; flex-direction:column; gap:12px}
+        input, select, textarea, button{
+            font: inherit;
+            border-radius:8px;
+            outline: none;
+            transition: all .12s ease;
+        }
+        input, select, textarea{
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            color: var(--text);
+            padding:10px 12px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.01);
+        }
+        input::placeholder{color: rgba(230,238,248,0.38)}
+
+        .btn{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:10px 14px;
+            border-radius:10px;
+            cursor:pointer;
+            border: none;
+            color: white;
+            background: linear-gradient(90deg,var(--accent),var(--accent-2));
+            box-shadow: 0 8px 22px rgba(34,193,195,0.08);
+            transform: translateZ(0);
+        }
+        .btn:hover{filter:brightness(1.06); transform: translateY(-1px)}
+        .btn:active{transform: translateY(0)}
+        .btn.ghost{
+            background: transparent;
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.04);
+            box-shadow: none;
+        }
+        .small-btn{
+            padding:6px 10px;
+            font-size:13px;
+            border-radius:8px;
+            background: linear-gradient(90deg,#2b2f36,#16181b);
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .btn-view{
+            background: linear-gradient(90deg,#1f8a62,#28a745);
+            color:#fff;
+            border:none;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin-top: 12px;
+        }
+        .card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform .12s ease, box-shadow .12s ease;
+            cursor: pointer;
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 40px rgba(2,6,23,0.6);
+        }
+        .card-media {
+            height: 120px;
+            background-size: cover;
+            background-position: center;
+            display:flex;
+            align-items:flex-end;
+            padding:10px;
+        }
+        .card-title {
+            padding: 12px;
+            font-weight:600;
+            font-size:16px;
+            color:var(--text);
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:8px;
+        }
+        .card-sub {
+            padding: 0 12px 12px 12px;
+            color:var(--muted);
+            font-size:13px;
+        }
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            border-top: 1px solid rgba(255,255,255,0.02);
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .data-table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:12px;
+            background: transparent;
+            border-radius:8px;
+            overflow:hidden;
+        }
+        .data-table th, .data-table td{
+            padding:10px 12px;
+            border-bottom:1px solid rgba(255,255,255,0.03);
+            color:var(--text);
+            font-size:14px;
+        }
+        .data-table thead th{
+            background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            color: var(--muted);
+            font-weight:600;
+            text-transform:uppercase;
+            letter-spacing:0.6px;
+            font-size:12px;
+        }
+        .data-table tbody tr:hover{
+            background: linear-gradient(90deg, rgba(124,92,255,0.03), rgba(34,193,195,0.02));
+        }
+
+        .table-center{max-width:820px; margin:0 auto}
+        .muted{color:var(--muted); font-size:13px}
+        
+        .dynamic-field {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .delete-field {
+            background: linear-gradient(90deg,#363b44,#1d1f23) !important;
+            color: var(--muted) !important;
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width:720px){
+            .container{margin:18px; padding:18px}
+            .card-actions{flex-direction:column}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Pantalla de Inicio de Sesión -->
+        <div id="login-screen">
+            <h1>Iniciar Sesión</h1>
+            <p class="muted" style="text-align:center; margin-bottom:12px">Usa cualquier credencial para probar la demo</p>
+            <form id="login-form">
+                <input type="text" id="username" placeholder="Usuario" required />
+                <input type="password" id="password" placeholder="Contraseña" required />
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:6px;">
+                    <button class="btn" type="submit">Entrar</button>
+                    <button type="button" class="btn ghost" onclick="document.getElementById('username').value='';document.getElementById('password').value=''">Limpiar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Formularios -->
+        <div id="records-screen" class="hidden">
+            <h2>Formularios</h2>
+            <p class="muted">Selecciona un formulario para gestionar sus datos.</p>
+            <div style="text-align:center; margin-bottom:20px;">
+                <button id="create-new-btn" class="btn">+ Crear Nuevo Formulario</button>
+            </div>
+            <div id="cards-container" class="cards" aria-live="polite">
+                <!-- Cards generadas con JS -->
+            </div>
+        </div>
+
+        <!-- Crear Formulario -->
+        <div id="create-form-screen" class="hidden">
+            <h2>Crear Nuevo Formulario</h2>
+            <div class="form-section table-center">
+                <form id="create-form" style="max-width:680px; margin:0 auto;">
+                    <table class="data-table">
+                        <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td>Nombre</td>
+                                <td><input type="text" id="create-name" required style="width:100%" placeholder="Nombre del formulario"></td>
+                            </tr>
+                            <tr>
+                                <td>Email</td>
+                                <td><input type="email" id="create-email" required style="width:100%" placeholder="Email de contacto"></td>
+                            </tr>
+                            <tr>
+                                <td>Teléfono</td>
+                                <td><input type="tel" id="create-phone" style="width:100%" placeholder="Teléfono (opcional)"></td>
+                            </tr>
+                            <tr>
+                                <td>Departamento</td>
+                                <td>
+                                    <select id="create-department" style="width:100%">
+                                        <option value="">Seleccionar departamento...</option>
+                                        <option value="RRHH">RRHH</option>
+                                        <option value="TI">TI</option>
+                                        <option value="Ventas">Ventas</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Finanzas">Finanzas</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr id="create-form-add-row">
+                                <td colspan="2" style="text-align:center">
+                                    <button type="button" class="small-btn" id="create-add-field-btn">
+                                        + Agregar Campo
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="text-align:center; margin-top:14px;">
+                        <button class="btn" type="submit">Crear Formulario</button>
+                        <button type="button" id="back-from-create" class="btn ghost">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Editar Formulario -->
+        <div id="edit-form-screen" class="hidden">
+            <h2>Editar Formulario</h2>
+            <div class="form-section table-center">
+                <form id="edit-form" style="max-width:680px; margin:0 auto;">
+                    <h3>Información General</h3>
+                    <table class="data-table">
+                        <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td>Nombre</td>
+                                <td><input type="text" id="edit-name" required style="width:100%"></td>
+                            </tr>
+                            <tr>
+                                <td>Email</td>
+                                <td><input type="email" id="edit-email" required style="width:100%"></td>
+                            </tr>
+                            <tr>
+                                <td>Teléfono</td>
+                                <td><input type="tel" id="edit-phone" style="width:100%"></td>
+                            </tr>
+                            <tr>
+                                <td>Departamento</td>
+                                <td>
+                                    <select id="edit-department" style="width:100%">
+                                        <option value="RRHH">RRHH</option>
+                                        <option value="TI">TI</option>
+                                        <option value="Ventas">Ventas</option>
+                                        <option value="Marketing">Marketing</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 style="margin-top:20px">Columnas de Datos</h3>
+                    <p class="muted">Define las columnas que tendrá la tabla de datos</p>
+                    <table class="data-table">
+                        <thead><tr><th>Nombre de Columna</th><th>Tipo</th><th>Acciones</th></tr></thead>
+                        <tbody id="edit-columns-tbody">
+                            <!-- Columnas dinámicas -->
+                        </tbody>
+                    </table>
+
+                    <div style="text-align:center; margin-top:14px;">
+                        <button type="button" id="edit-add-column-btn" class="small-btn">+ Agregar Columna</button>
+                    </div>
+
+                    <div style="text-align:center; margin-top:20px;">
+                        <button class="btn" type="submit">Guardar</button>
+                        <button type="button" id="back-to-records-edit" class="btn ghost">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Añadir Datos (tabla dinámica) -->
+        <div id="add-data-screen" class="hidden">
+            <h2>Añadir Datos</h2>
+            <div class="table-center">
+                <h3 id="add-data-title">Registros</h3>
+                <table class="data-table" id="add-data-table">
+                    <thead id="add-data-thead">
+                        <!-- Encabezados dinámicos -->
+                    </thead>
+                    <tbody id="add-data-tbody">
+                        <!-- Datos existentes -->
+                    </tbody>
+                </table>
+
+                <form id="add-data-form" style="margin-top:20px;">
+                    <div id="form-inputs-container">
+                        <!-- Inputs dinámicos -->
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:12px; justify-content:center;">
+                        <button class="btn" type="submit">Guardar Fila</button>
+                        <button type="button" id="back-to-records-add" class="btn ghost">Volver</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Ver Detalles -->
+        <div id="view-record-screen" class="hidden">
+            <h2>Detalles del Formulario</h2>
+            <div class="record-details table-center">
+                <h3>Información General</h3>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                    <tbody>
+                        <tr><th>ID</th><td><span id="view-id"></span></td></tr>
+                        <tr><th>Nombre</th><td><span id="view-name"></span></td></tr>
+                        <tr><th>Email</th><td><span id="view-email"></span></td></tr>
+                        <tr><th>Teléfono</th><td><span id="view-phone"></span></td></tr>
+                        <tr><th>Departamento</th><td><span id="view-department"></span></td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Datos Registrados</h3>
+                <table class="data-table" id="view-data-table">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+
+                <div style="text-align:center; margin-top:12px;">
+                    <button id="back-to-records-view" class="btn ghost">Volver</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let records = [
+            { 
+                id: 1, 
+                name: 'Formulario A', 
+                email: 'a@example.com', 
+                phone: '123456789', 
+                department: 'RRHH', 
+                columns: [
+                    { name: 'Producto', type: 'text' },
+                    { name: 'Cantidad', type: 'number' }
+                ],
+                data: [
+                    { Producto: 'Laptop', Cantidad: '5' },
+                    { Producto: 'Mouse', Cantidad: '10' }
+                ]
+            },
+            { 
+                id: 2, 
+                name: 'Formulario B', 
+                email: 'b@example.com', 
+                phone: '987654321', 
+                department: 'TI', 
+                columns: [
+                    { name: 'Fecha', type: 'date' },
+                    { name: 'Descripción', type: 'text' }
+                ],
+                data: []
+            }
+        ];
+
+        let selectedRecord = null;
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
+            const screen = document.getElementById(screenId);
+            if (screen) screen.classList.remove('hidden');
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            showScreen('login-screen');
+            initializeEventListeners();
+        });
+
+        function initializeEventListeners() {
+            // Login
+            document.getElementById('login-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                showScreen('records-screen');
+                loadRecords();
+            });
+
+            // Crear nuevo
+            document.getElementById('create-new-btn').addEventListener('click', function() {
+                clearDynamicFields('create');
+                document.getElementById('create-form').reset();
+                showScreen('create-form-screen');
+            });
+
+            document.getElementById('back-from-create').addEventListener('click', function() {
+                showScreen('records-screen');
+                loadRecords();
+            });
+
+            // Crear: submit
+            document.getElementById('create-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const maxId = records.length ? Math.max(...records.map(r => r.id)) : 0;
+                const newId = maxId + 1;
+
+                const newRecord = {
+                    id: newId,
+                    name: document.getElementById('create-name').value,
+                    email: document.getElementById('create-email').value,
+                    phone: document.getElementById('create-phone').value,
+                    department: document.getElementById('create-department').value,
+                    columns: [],
+                    data: []
+                };
+
+                records.push(newRecord);
+                this.reset();
+                clearDynamicFields('create');
+
+                alert('Formulario creado exitosamente');
+                showScreen('records-screen');
+                loadRecords();
+            });
+
+            // Añadir datos
+            document.getElementById('add-data-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (!selectedRecord) return;
+
+                const rowData = {};
+                selectedRecord.columns.forEach(col => {
+                    const input = document.querySelector(`#input-${col.name}`);
+                    if (input) rowData[col.name] = input.value;
+                });
+
+                const recordIndex = records.findIndex(r => r.id === selectedRecord.id);
+                if (recordIndex !== -1) {
+                    records[recordIndex].data.push(rowData);
+                    selectedRecord = records[recordIndex];
+                }
+
+                // Limpiar inputs
+                document.querySelectorAll('#form-inputs-container input').forEach(inp => inp.value = '');
+                
+                // Actualizar tabla
+                loadDataTable(selectedRecord);
+                
+                alert('Fila guardada exitosamente');
+            });
+
+            // Edit: submit
+            document.getElementById('edit-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (!selectedRecord) return;
+
+                const columns = [];
+                document.querySelectorAll('#edit-columns-tbody tr').forEach(row => {
+                    const nameInput = row.querySelector('input[type="text"]');
+                    const typeSelect = row.querySelector('select');
+                    if (nameInput && typeSelect && nameInput.value.trim()) {
+                        columns.push({
+                            name: nameInput.value.trim(),
+                            type: typeSelect.value
+                        });
+                    }
+                });
+
+                const recordIndex = records.findIndex(r => r.id === selectedRecord.id);
+                if (recordIndex !== -1) {
+                    records[recordIndex] = {
+                        ...records[recordIndex],
+                        name: document.getElementById('edit-name').value,
+                        email: document.getElementById('edit-email').value,
+                        phone: document.getElementById('edit-phone').value,
+                        department: document.getElementById('edit-department').value,
+                        columns: columns
+                    };
+                    selectedRecord = records[recordIndex];
+                }
+
+                alert('Formulario actualizado');
+                showScreen('records-screen');
+                loadRecords();
+            });
+
+            // Botones volver
+            document.getElementById('back-to-records-edit').addEventListener('click', function() {
+                showScreen('records-screen');
+                loadRecords();
+            });
+            document.getElementById('back-to-records-add').addEventListener('click', function() {
+                showScreen('records-screen');
+                loadRecords();
+            });
+            document.getElementById('back-to-records-view').addEventListener('click', function() {
+                showScreen('records-screen');
+                loadRecords();
+            });
+
+            // Agregar columna
+            document.getElementById('edit-add-column-btn').addEventListener('click', function() {
+                addColumnRow();
+            });
+
+            // Agregar campo personalizado en crear
+            document.getElementById('create-add-field-btn').addEventListener('click', function() {
+                addDynamicField('create');
+            });
+        }
+
+        function addColumnRow() {
+            const tbody = document.getElementById('edit-columns-tbody');
+            const tr = document.createElement('tr');
+            tr.className = 'dynamic-field';
+
+            tr.innerHTML = `
+                <td>
+                    <input type="text" placeholder="Nombre de la columna" style="width:100%">
+                </td>
+                <td>
+                    <select style="width:100%">
+                        <option value="text">Texto</option>
+                        <option value="number">Número</option>
+                        <option value="date">Fecha</option>
+                        <option value="email">Email</option>
+                    </select>
+                </td>
+                <td style="text-align:center">
+                    <button type="button" class="small-btn delete-field">×</button>
+                </td>
+            `;
+
+            const deleteBtn = tr.querySelector('.delete-field');
+            deleteBtn.addEventListener('click', () => tr.remove());
+
+            tbody.appendChild(tr);
+        }
+
+        function addDynamicField(formType) {
+            const tbody = document.querySelector(`#${formType}-form table tbody`);
+            const addRow = document.getElementById(`${formType}-form-add-row`);
+            if (!tbody || !addRow) return;
+
+            const tr = document.createElement('tr');
+            tr.className = 'dynamic-field';
+
+            tr.innerHTML = `
+                <td>
+                    <input type="text" placeholder="Nombre del campo" style="width:100%">
+                </td>
+                <td style="display:flex;gap:8px">
+                    <input type="text" placeholder="Valor" style="width:100%">
+                    <button type="button" class="small-btn delete-field" style="padding:6px 10px">×</button>
+                </td>
+            `;
+
+            const deleteBtn = tr.querySelector('.delete-field');
+            deleteBtn.addEventListener('click', () => tr.remove());
+
+            tbody.insertBefore(tr, addRow);
+        }
+
+        function clearDynamicFields(formType) {
+            const tbody = document.querySelector(`#${formType}-form table tbody`);
+            if (!tbody) return;
+            tbody.querySelectorAll('.dynamic-field').forEach(r => r.remove());
+        }
+
+        function loadRecords() {
+            selectedRecord = null;
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+
+            records.forEach(record => {
+                const card = document.createElement('article');
+                card.className = 'card';
+
+                const media = document.createElement('div');
+                media.className = 'card-media';
+                media.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.25)), url('https://picsum.photos/seed/form-${record.id}/600/360')`;
+
+                const titleRow = document.createElement('div');
+                titleRow.className = 'card-title';
+                const title = document.createElement('div');
+                title.textContent = record.name;
+                const badge = document.createElement('div');
+                badge.className = 'muted';
+                badge.style.fontSize = '12px';
+                badge.textContent = `ID ${record.id}`;
+                titleRow.appendChild(title);
+                titleRow.appendChild(badge);
+
+                const sub = document.createElement('div');
+                sub.className = 'card-sub';
+                sub.innerHTML = `
+                    ${record.email}<br>
+                    ${record.phone ? `Tel: ${record.phone}<br>` : ''}
+                    ${record.department ? `Dept: ${record.department}` : ''}
+                    <br><strong>${record.data.length} registros</strong>
+                `;
+
+                const actions = document.createElement('div');
+                actions.className = 'card-actions';
+
+                const viewBtn = document.createElement('button');
+                viewBtn.className = 'small-btn btn-view';
+                viewBtn.textContent = 'Ver';
+                viewBtn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    viewRecord(record);
+                });
+
+                const addBtn = document.createElement('button');
+                addBtn.className = 'small-btn';
+                addBtn.textContent = 'Añadir Dato';
+                addBtn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    selectedRecord = record;
+                    if (!record.columns || record.columns.length === 0) {
+                        alert('Primero debes definir las columnas en "Editar"');
+                        return;
+                    }
+                    showAddDataScreen(record);
+                });
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'small-btn';
+                editBtn.textContent = 'Editar';
+                editBtn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    selectedRecord = record;
+                    showEditScreen(record);
+                });
+
+                actions.appendChild(editBtn);
+                actions.appendChild(addBtn);
+                actions.appendChild(viewBtn);
+
+                card.appendChild(media);
+                card.appendChild(titleRow);
+                card.appendChild(sub);
+                card.appendChild(actions);
+                container.appendChild(card);
+            });
+        }
+
+        function showEditScreen(record) {
+            document.getElementById('edit-name').value = record.name;
+            document.getElementById('edit-email').value = record.email;
+            document.getElementById('edit-phone').value = record.phone;
+            document.getElementById('edit-department').value = record.department;
+
+            const tbody = document.getElementById('edit-columns-tbody');
+            tbody.innerHTML = '';
+
+            if (record.columns && record.columns.length > 0) {
+                record.columns.forEach(col => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'dynamic-field';
+                    tr.innerHTML = `
+                        <td>
+                            <input type="text" value="${col.name}" style="width:100%">
+                        </td>
+                        <td>
+                            <select style="width:100%">
+                                <option value="text" ${col.type === 'text' ? 'selected' : ''}>Texto</option>
+                                <option value="number" ${col.type === 'number' ? 'selected' : ''}>Número</option>
+                                <option value="date" ${col.type === 'date' ? 'selected' : ''}>Fecha</option>
+                                <option value="email" ${col.type === 'email' ? 'selected' : ''}>Email</option>
+                            </select>
+                        </td>
+                        <td style="text-align:center">
+                            <button type="button" class="small-btn delete-field">×</button>
+                        </td>
+                    `;
+                    const deleteBtn = tr.querySelector('.delete-field');
+                    deleteBtn.addEventListener('click', () => tr.remove());
+                    tbody.appendChild(tr);
+                });
+            }
+
+            showScreen('edit-form-screen');
+        }
+
+        function showAddDataScreen(record) {
+            document.getElementById('add-data-title').textContent = `Añadir Datos a: ${record.name}`;
+            
+            // Generar encabezados
+            const thead = document.getElementById('add-data-thead');
+            thead.innerHTML = '<tr>';
+            record.columns.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = col.name;
+                thead.querySelector('tr').appendChild(th);
+            });
+            const th = document.createElement('th');
+            th.textContent = 'Acciones';
+            thead.querySelector('tr').appendChild(th);
+
+            // Generar inputs
+            const container = document.getElementById('form-inputs-container');
+            container.innerHTML = '';
+            record.columns.forEach(col => {
+                const div = document.createElement('div');
+                const label = document.createElement('label');
+                label.textContent = col.name;
+                label.style.display = 'block';
+                label.style.marginBottom = '4px';
+                label.style.color = 'var(--muted)';
+                
+                let input;
+                if (col.type === 'number') {
+                    input = document.createElement('input');
+                    input.type = 'number';
+                } else if (col.type === 'date') {
+                    input = document.createElement('input');
+                    input.type = 'date';
+                } else if (col.type === 'email') {
+                    input = document.createElement('input');
+                    input.type = 'email';
+                } else {
+                    input = document.createElement('input');
+                    input.type = 'text';
+                }
+
+                input.id = `input-${col.name}`;
+                input.style.width = '100%';
+                input.style.marginBottom = '12px';
+
+                div.appendChild(label);
+                div.appendChild(input);
+                container.appendChild(div);
+            });
+
+            loadDataTable(record);
+            showScreen('add-data-screen');
+        }
+
+        function loadDataTable(record) {
+            const tbody = document.getElementById('add-data-tbody');
+            tbody.innerHTML = '';
+
+            if (record.data && record.data.length > 0) {
+                record.data.forEach((row, idx) => {
+                    const tr = document.createElement('tr');
+                    record.columns.forEach(col => {
+                        const td = document.createElement('td');
+                        td.textContent = row[col.name] || '';
+                        tr.appendChild(td);
+                    });
+                    const tdAction = document.createElement('td');
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.className = 'small-btn delete-field';
+                    delBtn.textContent = 'Eliminar';
+                    delBtn.addEventListener('click', () => {
+                        const recIdx = records.findIndex(r => r.id === record.id);
+                        if (recIdx !== -1) {
+                            records[recIdx].data.splice(idx, 1);
+                            selectedRecord = records[recIdx];
+                            loadDataTable(selectedRecord);
+                        }
+                    });
+                    tdAction.appendChild(delBtn);
+                    tr.appendChild(tdAction);
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function viewRecord(record) {
+            if (!record) return;
+
+            document.getElementById('view-id').textContent = record.id;
+            document.getElementById('view-name').textContent = record.name;
+            document.getElementById('view-email').textContent = record.email;
+            document.getElementById('view-phone').textContent = record.phone || 'No especificado';
+            document.getElementById('view-department').textContent = record.department || 'No especificado';
+
+            const table = document.getElementById('view-data-table');
+            const thead = table.querySelector('thead');
+            thead.innerHTML = '<tr>';
+
+            if (record.columns && record.columns.length > 0) {
+                record.columns.forEach(col => {
+                    const th = document.createElement('th');
+                    th.textContent = col.name;
+                    thead.querySelector('tr').appendChild(th);
+                });
+            }
+
+            const tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+
+            if (record.data && record.data.length > 0) {
+                record.data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    if (record.columns && record.columns.length > 0) {
+                        record.columns.forEach(col => {
+                            const td = document.createElement('td');
+                            td.textContent = row[col.name] || '';
+                            tr.appendChild(td);
+                        });
+                    }
+                    tbody.appendChild(tr);
+                });
+            } else {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = record.columns ? record.columns.length : 1;
+                td.textContent = 'No hay datos registrados';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+            }
+
+            showScreen('view-record-screen');
+        }
+    </script>
+</body>
+</html>
